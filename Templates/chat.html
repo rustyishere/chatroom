@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Private Chat Room</title>
+    <style>
+         body {
+            font-family: 'Courier New', monospace;
+            /* background-color: #111; */
+            background-image: url(https://st4.depositphotos.com/18803028/29754/i/450/depositphotos_297549158-stock-photo-dark-space-abstract-wallpaper-shine.jpg);
+            background-repeat: no-repeat;
+            background-size: cover;
+            color: #9AC8CD;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+
+        }
+
+        h1 {
+            backdrop-filter: blur(5px); 
+            color: #9AC8CD;
+        }
+
+        h4 {
+            backdrop-filter: blur(5px); 
+            color: #9AC8CD;
+        }
+
+        #chat-messages {
+            background-color: black;
+            height: 200px;
+            overflow-y: scroll;
+            border: 1px solid #4CAF50;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        #message-input {
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #4CAF50;
+            border-radius: 5px;
+            background-color: #111;
+            color: #0F0;
+            width: 60vh;
+        }
+
+        button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: #111;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Private Chat Room</h1>
+    <div id="room-info"></div> 
+    <h4>Your chat is private</h4>
+    <div id="chat-messages"></div>
+    <input type="text" id="message-input" placeholder="Type your message..." autocomplete="off" onkeypress="handleKeyPress(event)">
+    <button onclick="sendMessage()">Send</button>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const username = urlParams.get('username');
+        const room = window.location.pathname.split('/').pop();
+
+
+        socket.emit('join', { username: username, room_id: room });
+
+        function sendMessage() {
+            var messageInput = document.getElementById('message-input');
+            var message = messageInput.value;
+
+            if (message.trim() !== '') {
+                socket.emit('message', { username: username, room_id: room, message: message });
+                messageInput.value = '';
+            }
+        }
+        var roomInfo = document.getElementById('room-info');
+        roomInfo.innerHTML = `<p>Room Key: ${room}</p>`;
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        socket.on('message', function (data) {
+            var chatMessages = document.getElementById('chat-messages');
+            var newMessage = document.createElement('div');
+            newMessage.innerHTML = `<strong>${data.username}:</strong> ${data.message}`;
+            chatMessages.appendChild(newMessage);
+
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+    </script>
+</body>
+
+</html>
